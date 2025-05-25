@@ -1,0 +1,43 @@
+name: Daily Weather ETL Pipeline
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Runs every day at 6 AM UTC
+  push:
+    branches:
+      - main
+
+jobs:
+  etl-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run API Test
+        run: python testAPI.py
+
+      - name: Run Transformation Test
+        run: python test_transformations.py
+
+      - name: Run ETL Process
+        run: |
+          python -c "
+from extract import extract_weather_data;
+from transform import transform_weather_data;
+from load import load_to_csv;
+
+raw = extract_weather_data();
+df = transform_weather_data(raw);
+load_to_csv(df);
+"
